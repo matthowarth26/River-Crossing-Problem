@@ -1,0 +1,93 @@
+class RiverCrossingDFS:
+    def __init__(self, farmer, lion, goat, grass):
+        self.farmer = farmer
+        self.lion = lion
+        self.goat = goat
+        self.grass = grass
+
+    def is_valid(self):
+        # Lion can't be left alone with goat without farmer
+        if self.lion == self.goat and self.farmer != self.lion:
+            return False
+        # Goat can't be left alone with grass without farmer
+        if self.goat == self.grass and self.farmer != self.goat:
+            return False
+        return True
+
+    def is_goal(self):
+        return self.farmer == 1 and self.lion == 1 and self.goat == 1 and self.grass == 1
+
+    def __eq__(self, other):
+        return (self.farmer, self.lion, self.goat, self.grass) == (other.farmer, other.lion, other.goat, other.grass)
+
+    def __hash__(self):
+        return hash((self.farmer, self.lion, self.goat, self.grass))
+
+    def __str__(self):
+        left_bank = []
+        right_bank = []
+
+        if self.farmer == 0:
+            left_bank.append("Farmer")
+        else:
+            right_bank.append("Farmer")
+
+        if self.lion == 0:
+            left_bank.append("Lion")
+        else:
+            right_bank.append("Lion")
+
+        if self.goat == 0:
+            left_bank.append("Goat")
+        else:
+            right_bank.append("Goat")
+
+        if self.grass == 0:
+            left_bank.append("Grass")
+        else:
+            right_bank.append("Grass")
+
+        return (f"Left Bank (Starting side): {', '.join(left_bank) if left_bank else 'None'}\n"
+                f"Right Bank (Target side): {', '.join(right_bank) if right_bank else 'None'}")
+
+# Potential moves: Farmer alone, farmer with lion, farmer with goat, farmer with grass
+potential_moves = [(1, 0, 0, 0), (1, 1, 0, 0), (1, 0, 1, 0), (1, 0, 0, 1)]
+
+def get_successors(state):
+    successors = []
+    for move in potential_moves:
+        new_state = RiverCrossingDFS(state.farmer ^ move[0], state.lion ^ move[1], state.goat ^ move[2], state.grass ^ move[3])
+        if new_state.is_valid():
+            successors.append(new_state)
+    return successors
+
+def dfs(init_state):
+    stack = [(init_state, [])]  # Store (state, branch) to track solution steps
+    visited = set()
+
+    while stack:
+        state, branch = stack.pop()
+
+        if state in visited:
+            continue
+        visited.add(state)
+
+        new_branch = branch + [state]
+
+        if state.is_goal():
+            return new_branch  # Return the sequence of moves
+
+        for successor in get_successors(state):
+            stack.append((successor, new_branch))
+
+    return None  # No solution found
+
+# Run Depth First Search
+init_state = RiverCrossingDFS(0, 0, 0, 0)
+solver = dfs(init_state)
+
+if solver:
+    for i, state in enumerate(solver):
+        print(f"Move {i+1}:\n{state}\n")
+else:
+    print("No solution found")
