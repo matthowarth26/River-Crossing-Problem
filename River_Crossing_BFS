@@ -1,0 +1,95 @@
+class State:
+    def __init__(self, farmer, lion, goat, grass):
+        self.farmer = farmer
+        self.lion = lion
+        self.goat = goat
+        self.grass = grass
+
+    def is_valid(self):
+        # Lion can't be left alone with goat without farmer
+        if self.lion == self.goat and self.farmer != self.lion:
+            return False
+        # Goat can't be left alone with goat without farmer
+        if self.goat == self.grass and self.farmer != self.goat:
+            return False
+        return True
+
+    def is_goal(self):
+        return self.farmer == 1 and self.lion == 1 and self.goat == 1 and self.grass == 1
+
+    def __eq__(self, other):
+        return self.farmer == other.farmer and self.lion == other.lion and self.goat == other.goat and self.grass == other.grass
+
+    def __hash__(self):
+        return hash((self.farmer, self.lion, self.goat, self.grass))
+
+    def __str__(self):
+        start_side = []
+        target_side = []
+
+        if self.farmer == 0:
+            start_side.append("Farmer")
+        else:
+            target_side.append("Farmer")
+
+        if self.lion == 0:
+            start_side.append("Lion")
+        else:
+            target_side.append("Lion")
+
+        if self.goat == 0:
+            start_side.append("Goat")
+        else:
+            target_side.append("Goat")
+
+        if self.grass == 0:
+            start_side.append("Grass")
+        else:
+            target_side.append("Grass")
+
+        return (f"Starting side: {', '.join(start_side) if start_side else 'None'}\n"
+                f"Target side: {', '.join(target_side) if target_side else 'None'}")
+
+# Possible moves: Farmer alone, farmer with lion, farmer with goat, farmer with grass
+possible_moves = [(1, 0, 0, 0), (1, 1, 0, 0), (1, 0, 1, 0),  (1, 0, 0, 1)]
+
+def get_successors(state):
+    successors = []
+    for move in possible_moves:
+        new_state = State(state.farmer ^ move[0], state.lion ^ move[1], state.goat ^ move[2], state.grass ^ move[3])
+        if new_state.is_valid():
+            successors.append(new_state)
+    return successors
+
+def bfs(start_state):
+    from collections import deque
+    queue = deque([(start_state, [])])  # Store (state, path) to track solution steps
+    visited = set()
+
+    while queue:
+        state, path = queue.popleft()
+
+        if state in visited:
+            continue
+        visited.add(state)
+
+        # Path tracking
+        new_path = path + [state]
+
+        if state.is_goal():
+            return new_path  # Return the sequence of moves leading to success
+
+        for successor in get_successors(state):
+            queue.append((successor, new_path))
+
+    return None  # No solution found
+
+# Run BFS
+start_state = State(0, 0, 0, 0)
+solution = bfs(start_state)
+
+if solution:
+    for i, state in enumerate(solution):
+        print(f"Step {i+1}:\n{state}\n")
+else:
+    print("No solution found")
